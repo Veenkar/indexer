@@ -4,7 +4,10 @@
 import glob
 from pathlib import Path
 
-EXTENSIONS=[".h", ".hpp", ".include", ".c", ".cpp", ".cc", ".define"]
+INCLUDE_EXTENSIONS = [".h", ".hpp", ".include"]
+OTHER_EXTENSIONS = [".c", ".cpp", ".cc", ".define"]
+
+EXTENSIONS = INCLUDE_EXTENSIONS + OTHER_EXTENSIONS;
 
 rootdir = Path(".")
 rootdir_abs=Path(".").absolute()
@@ -31,14 +34,31 @@ def findFiles(extensions, searchdir="."):
     paths.sort()
     return paths
 
+def fileLocations(files):
+    dirs = []
+    for file in files:
+        basename = str(Path(file).parent)
+        if not basename in dirs:
+            print(basename)
+            dirs.append(basename)
+    dirs.sort()
+    return dirs
+
 def listToFile(in_list, filename):
     with open(filename, 'w') as f:
         for item in in_list:
             f.write("%s\n" % item)
 
-files = findFiles(EXTENSIONS)
-files = ["indexer.py"] + files
-listToFile(files, "indexer.files")
+include_files = findFiles(INCLUDE_EXTENSIONS)
+other_files = findFiles(OTHER_EXTENSIONS)
 
+files = ["index.py"] + include_files + other_files
+files.sort()
+
+include_dirs = fileLocations(include_files)
+
+
+listToFile(files, "indexer.files")
+listToFile(include_dirs, "indexer.includes")
 
 print(len(files))
