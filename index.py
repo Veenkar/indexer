@@ -7,7 +7,7 @@ import argparse
 
 ## options
 INCLUDE_EXTENSIONS = [".h", ".hpp", ".include"]
-OTHER_EXTENSIONS = [".c", ".cpp", ".cc", ".define"]
+OTHER_EXTENSIONS = [".c", ".cpp", ".cc", ".define", ".py"]
 SKIP_PATHS = ["**/cuda/**"]
 SEARCH_PATHS = ["tensorflow/core/kernels", "tensorflow/core/util"]
 DEFAULT_PROJS=["tf"]
@@ -81,25 +81,25 @@ def listToFile(in_list, filename):
             f.write("%s\n" % item)
 
 
-def processProj(proj_name):
+def processProj(proj_name, proj_path, search_paths, skip_paths, include_extensions, other_extensions):
     ## projdir
-    projdir = Path(proj_name)
-    proj_name_abs = Path(projdir).absolute()
-    print("PROJ: {0}".format(proj_name_abs))
+    projdir = Path(proj_path)
+    projdir_abs = Path(projdir).absolute()
+    print("PROJ NAME: {0}, PATH: {1}".format(proj_name, projdir_abs))
 
     include_files = []
     other_files = []
-    for search_path in SEARCH_PATHS:
-        include_files += findFiles(extensions=INCLUDE_EXTENSIONS, searchdir = projdir / search_path, rootdir = projdir, skip_paths=SKIP_PATHS)
-        other_files += findFiles(extensions=OTHER_EXTENSIONS, searchdir = projdir / search_path, rootdir = projdir, skip_paths=SKIP_PATHS)
+    for search_path in search_paths:
+        include_files += findFiles(extensions=include_extensions, searchdir = projdir / search_path, rootdir = projdir, skip_paths=skip_paths)
+        other_files += findFiles(extensions=other_extensions, searchdir = projdir / search_path, rootdir = projdir, skip_paths=skip_paths)
 
-    files = ["index.py"] + include_files + other_files
+    files = include_files + other_files
     files.sort()
 
     include_dirs = fileLocations(include_files)
 
-    listToFile(files, str(Path(proj_name) / "{0}.files".format(proj_name)) )
-    listToFile(include_dirs, str(Path(proj_name) / "{0}.includes".format(proj_name)) )
+    listToFile(files, str(Path(proj_path) / "{0}.files".format(proj_name)) )
+    listToFile(include_dirs, str(Path(proj_path) / "{0}.includes".format(proj_name)) )
 
     print(len(files))
 
@@ -122,7 +122,8 @@ if __name__ == "__main__":
     print("ROOT: {0}".format(rootdir_abs))
 
     for proj_name in projs:
-        processProj(proj_name)
+        processProj(proj_name, proj_name, SEARCH_PATHS, SKIP_PATHS, INCLUDE_EXTENSIONS, OTHER_EXTENSIONS)
+        #processProj(proj_name + "_updater", proj_name, SEARCH_PATHS, SKIP_PATHS, INCLUDE_EXTENSIONS, OTHER_EXTENSIONS)
 
 
 
