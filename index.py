@@ -8,7 +8,7 @@ import argparse
 ## options
 INCLUDE_EXTENSIONS = [".h", ".hpp", ".include"]
 OTHER_EXTENSIONS = [".c", ".cpp", ".cc", ".define", ".py"]
-SKIP_PATHS = ["**/cuda/**"]
+SKIP_PATHS = ["cuda"]
 SEARCH_PATHS = ["tensorflow/core/kernels", "tensorflow/core/util"]
 DEFAULT_PROJS=["tf"]
 
@@ -59,7 +59,8 @@ def skipPaths(paths, skiplist):
     for path in paths:
         append = True
         for skip_path in skiplist:
-            if path.match(skip_path):
+            # TODO re-egzamine sh path matching (prev: if path.match(skip_path))
+            if skip_path in str(path):
                 append = False
         if append:
             new_paths.append(str(path))
