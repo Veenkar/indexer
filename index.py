@@ -81,7 +81,10 @@ class Indexer:
         ## projdir
         projdir = Path(proj_path)
         projdir_abs = Path(projdir).absolute()
+        proj_name = Path(proj_name).name
+
         print("PROJ NAME: {0}, PATH: {1}".format(proj_name, projdir_abs))
+
 
         include_files = []
         other_files = []
