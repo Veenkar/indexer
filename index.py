@@ -5,120 +5,126 @@ import glob
 from pathlib import Path
 import argparse
 
-## options
-INCLUDE_EXTENSIONS = [".h", ".hpp", ".include"]
-OTHER_EXTENSIONS = [".c", ".cpp", ".cc", ".define", ".py"]
-SKIP_PATHS = ["cuda"]
-SEARCH_PATHS = ["tensorflow/core/kernels", "tensorflow/core/util"]
-DEFAULT_PROJS = ["tf"]
 
-## options postprocess
-EXTENSIONS = INCLUDE_EXTENSIONS + OTHER_EXTENSIONS
-if not SEARCH_PATHS:
-    SEARCH_PATHS = [""]
+class Indexer:
+    def __init__(self):
+        pass
 
+    def findFiles(self, extensions, searchdir=Path("."), rootdir=None, skip_paths=[]):
+        searchdir = Path(searchdir)
+        if rootdir == None:
+            rootdir = searchdir
 
-def findFiles(extensions, searchdir=Path("."), rootdir=None, skip_paths=[]):
-    searchdir = Path(searchdir)
-    if rootdir == None:
-        rootdir = searchdir
+        rootdir = Path(rootdir)
+        print(searchdir)
 
-    rootdir = Path(rootdir)
-    print(searchdir)
+        if not isinstance(extensions, list):
+            extensions = [extensions]
 
-    if not isinstance(extensions, list):
-        extensions = [extensions]
+        paths = []
+        for extension in extensions:
+            # print(extension)
+            searchexpr = "**/*{0}".format(extension)
+            str_searchexpr = str(searchexpr)
 
-    paths = []
-    for extension in extensions:
-        # print(extension)
-        searchexpr = "**/*{0}".format(extension)
-        str_searchexpr = str(searchexpr)
+            new_paths = searchdir.glob(str_searchexpr)
+            new_paths = [path.relative_to(rootdir) for path in new_paths]
+            new_paths = self.skipPaths(new_paths, skip_paths)
+            if new_paths:
+                paths += new_paths
 
-        new_paths = searchdir.glob(str_searchexpr)
-        new_paths = [path.relative_to(rootdir) for path in new_paths]
-        new_paths = skipPaths(new_paths, skip_paths)
-        if new_paths:
-            paths += new_paths
-
-    paths.sort()
-    return paths
+        paths.sort()
+        return paths
 
 
-def toGlob(paths):
-    if isinstance(paths, list):
-        return [Path(path) for path in paths]
-    else:
-        return Path(paths)
+    def toGlob(self, paths):
+        if isinstance(paths, list):
+            return [Path(path) for path in paths]
+        else:
+            return Path(paths)
 
 
-def skipPaths(paths, skiplist):
-    # paths = toGlob(paths)
-    new_paths = []
-    for path in paths:
-        append = True
-        for skip_path in skiplist:
-            # TODO re-egzamine sh path matching (prev: if path.match(skip_path))
-            if skip_path in str(path):
-                append = False
-        if append:
-            new_paths.append(str(path))
-    return new_paths
+    def skipPaths(self, paths, skiplist):
+        # paths = self.toGlob(paths)
+        new_paths = []
+        for path in paths:
+            append = True
+            for skip_path in skiplist:
+                # TODO re-egzamine sh path matching (prev: if path.match(skip_path))
+                if skip_path in str(path):
+                    append = False
+            if append:
+                new_paths.append(str(path))
+        return new_paths
 
 
-def fileLocations(files):
-    dirs = []
-    for file in files:
-        basename = str(Path(file).parent)
-        if not basename in dirs:
-            # print(basename)
-            dirs.append(basename)
-    dirs.sort()
-    return dirs
+    def fileLocations(self, files):
+        dirs = []
+        for file in files:
+            basename = str(Path(file).parent)
+            if not basename in dirs:
+                # print(basename)
+                dirs.append(basename)
+        dirs.sort()
+        return dirs
 
 
-def listToFile(in_list, filename):
-    with open(filename, "w") as f:
-        for item in in_list:
-            f.write("%s\n" % item)
+    def listToFile(self, in_list, filename):
+        with open(filename, "w") as f:
+            for item in in_list:
+                f.write("%s\n" % item)
 
 
-def processProj(
-    proj_name, proj_path, search_paths, skip_paths, include_extensions, other_extensions
-):
-    ## projdir
-    projdir = Path(proj_path)
-    projdir_abs = Path(projdir).absolute()
-    print("PROJ NAME: {0}, PATH: {1}".format(proj_name, projdir_abs))
+    def processProj( self,
+        proj_name, proj_path, search_paths, skip_paths, include_extensions, other_extensions
+    ):
+        ## projdir
+        projdir = Path(proj_path)
+        projdir_abs = Path(projdir).absolute()
+        print("PROJ NAME: {0}, PATH: {1}".format(proj_name, projdir_abs))
 
-    include_files = []
-    other_files = []
-    for search_path in search_paths:
-        include_files += findFiles(
-            extensions=include_extensions,
-            searchdir=projdir / search_path,
-            rootdir=projdir,
-            skip_paths=skip_paths,
-        )
-        other_files += findFiles(
-            extensions=other_extensions,
-            searchdir=projdir / search_path,
-            rootdir=projdir,
-            skip_paths=skip_paths,
-        )
+        include_files = []
+        other_files = []
+        for search_path in search_paths:
+            include_files += self.findFiles(
+                extensions=include_extensions,
+                searchdir=projdir / search_path,
+                rootdir=projdir,
+                skip_paths=skip_paths,
+            )
+            other_files += self.findFiles(
+                extensions=other_extensions,
+                searchdir=projdir / search_path,
+                rootdir=projdir,
+                skip_paths=skip_paths,
+            )
 
-    files = include_files + other_files
-    files.sort()
+        files = include_files + other_files
+        files.sort()
 
-    include_dirs = fileLocations(include_files)
+        include_dirs = self.fileLocations(include_files)
 
-    listToFile(files, str(Path(proj_path) / "{0}.files".format(proj_name)))
-    listToFile(include_dirs, str(Path(proj_path) / "{0}.includes".format(proj_name)))
+        self.listToFile(files, str(Path(proj_path) / "{0}.files".format(proj_name)))
+        self.listToFile(include_dirs, str(Path(proj_path) / "{0}.includes".format(proj_name)))
 
-    print(len(files))
+        print(len(files))
 
 
+# TEST
 if __name__ == "__main__":
+    ## options
+    INCLUDE_EXTENSIONS = [".h", ".hpp", ".include"]
+    OTHER_EXTENSIONS = [".c", ".cpp", ".cc", ".define", ".py"]
+    SKIP_PATHS = ["cuda"]
+    SEARCH_PATHS = ["tensorflow/core/kernels", "tensorflow/core/util"]
+    DEFAULT_PROJS = ["tf"]
+
+    ## options postprocess
+    EXTENSIONS = INCLUDE_EXTENSIONS + OTHER_EXTENSIONS
+    if not SEARCH_PATHS:
+        SEARCH_PATHS = [""]
+
+
     parser = argparse.ArgumentParser(description="Indexer.")
     parser.add_argument("proj_name", nargs="*")
     args = parser.parse_args()
@@ -136,8 +142,9 @@ if __name__ == "__main__":
     rootdir_abs = Path(".").absolute()
     print("ROOT: {0}".format(rootdir_abs))
 
+    indexer = Indexer()
     for proj_name in projs:
-        processProj(
+        indexer.processProj(
             proj_name,
             proj_name,
             SEARCH_PATHS,
