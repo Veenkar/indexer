@@ -6,6 +6,8 @@ from pathlib import Path
 import argparse
 import re
 
+PRINT_PATHS=False
+
 class Indexer:
     def __init__(self):
         self.all_paths = []
@@ -33,7 +35,7 @@ class Indexer:
         paths = []
         for extension in extensions:
             # print(extension)
-            searchexpr = ".*{0}".format(re.escape(extension))
+            searchexpr = ".*{0}$".format(re.escape(extension))
             regex = re.compile(searchexpr)
 
             #new_paths = filter(regex.match, self.all_paths)
@@ -49,6 +51,9 @@ class Indexer:
             if new_paths:
                 paths += new_paths
             print("{0}: {1}".format(extension, len(new_paths)))
+            if PRINT_PATHS:
+                for path in new_paths:
+                    print("\t{}".format(path))
 
         paths.sort()
         return paths
@@ -112,6 +117,7 @@ class Indexer:
 
     def listToFile(self, in_list, filename):
         with open(filename, "w") as f:
+            print("saving into: {}".format(filename))
             for item in in_list:
                 f.write("%s\n" % item)
 
