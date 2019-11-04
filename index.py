@@ -56,37 +56,11 @@ class Indexer:
         paths.sort()
         return paths
 
-    def findFiles(self, extensions, searchdir=Path("."), rootdir=None, skip_paths=[]):
-        searchdir = Path(searchdir)
-        if rootdir == None:
-            rootdir = searchdir
-
-        rootdir = Path(rootdir)
-
-        if not isinstance(extensions, list):
-            extensions = [extensions]
-
-        paths = []
-        for extension in extensions:
-            # print(extension)
-            searchexpr = "**/*{0}".format(extension)
-            str_searchexpr = str(searchexpr)
-
-            new_paths = searchdir.glob(str_searchexpr)
-            new_paths = [path.relative_to(rootdir) for path in new_paths]
-            new_paths = self.skipPaths(new_paths, skip_paths)
-            if new_paths:
-                paths += new_paths
-
-        paths.sort()
-        return paths
-
     def toGlob(self, paths):
         if isinstance(paths, list):
             return [Path(path) for path in paths]
         else:
             return Path(paths)
-
 
     def skipPaths(self, paths, skiplist):
         # paths = self.toGlob(paths)
