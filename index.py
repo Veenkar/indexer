@@ -4,11 +4,54 @@
 import glob
 from pathlib import Path
 import argparse
-
+import re
 
 class Indexer:
     def __init__(self):
+        self.all_paths = []
         pass
+
+    def initDir(self, searchdir):
+
+        searchdir = Path(searchdir)
+        print(searchdir)
+        self.all_paths = list(Path(searchdir).glob(str("**/*")))
+        print("init dir: {0} {1}".format(searchdir, len(self.all_paths)))
+
+
+    def findFilesFast(self, extensions, searchdir=Path("."), rootdir=None, skip_paths=[]):
+        searchdir = Path(searchdir)
+
+        if rootdir == None:
+            rootdir = searchdir
+
+        rootdir = Path(rootdir)
+
+        if not isinstance(extensions, list):
+            extensions = [extensions]
+
+        paths = []
+        for extension in extensions:
+            # print(extension)
+            searchexpr = ".*{0}".format(re.escape(extension))
+            regex = re.compile(searchexpr)
+
+            #new_paths = filter(regex.match, self.all_paths)
+            #new_paths = list(new_paths)
+
+            new_paths = []
+            for path in self.all_paths:
+                if regex.match(str(path)):
+                    new_paths += [path]
+
+            new_paths = [path.relative_to(rootdir) for path in new_paths]
+            new_paths = self.skipPaths(new_paths, skip_paths)
+            if new_paths:
+                paths += new_paths
+            print("{0}: {1}".format(extension, len(new_paths)))
+
+        paths.sort()
+        return paths
 
     def findFiles(self, extensions, searchdir=Path("."), rootdir=None, skip_paths=[]):
         searchdir = Path(searchdir)
@@ -16,7 +59,6 @@ class Indexer:
             rootdir = searchdir
 
         rootdir = Path(rootdir)
-        print(searchdir)
 
         if not isinstance(extensions, list):
             extensions = [extensions]
@@ -35,7 +77,6 @@ class Indexer:
 
         paths.sort()
         return paths
-
 
     def toGlob(self, paths):
         if isinstance(paths, list):
@@ -89,13 +130,14 @@ class Indexer:
         include_files = []
         other_files = []
         for search_path in search_paths:
-            include_files += self.findFiles(
+            self.initDir(projdir / search_path)
+            include_files += self.findFilesFast(
                 extensions=include_extensions,
                 searchdir=projdir / search_path,
                 rootdir=projdir,
                 skip_paths=skip_paths,
             )
-            other_files += self.findFiles(
+            other_files += self.findFilesFast(
                 extensions=other_extensions,
                 searchdir=projdir / search_path,
                 rootdir=projdir,
