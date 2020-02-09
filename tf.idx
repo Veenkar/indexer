@@ -1,0 +1,10 @@
+[general]
+name = tf
+rootdir = tf
+
+[search_paths]
+tensorflow/core/kernels
+tensorflow/core/util
+
+[skip_paths]
+cuda
