@@ -14,6 +14,9 @@ def main():
     cli_indexer.Perform_Indexing()
 
 class Cli_Indexer:
+    DEFAULT_INCLUDE_EXTENSIONS = [".h", ".hpp", ".include"]
+    DEFAULT_OTHER_EXTENSIONS = [".c", ".cpp", ".cc", ".define", ".py", ".lua", ".txt"]
+
     def __init__(self):
         self.argparser = argparse.ArgumentParser()
         self.argparser.add_argument('config_path', type=PurePath,
@@ -24,10 +27,10 @@ class Cli_Indexer:
         self.Read_Config()
 
     @staticmethod
-    def Read_Paths(config_items):
+    def Read_Items(config_items):
         res = []
-        for search_path in config_items:
-            (key, val) = search_path
+        for item in config_items:
+            (key, val) = item
             #print(key)
             res.append(key)
         return res
@@ -50,8 +53,18 @@ class Cli_Indexer:
             print(str(e))
             print("ERROR: did not find proper config in file {0}".format(self.config_path))
 
-        self.search_paths = Cli_Indexer.Read_Paths(self.config.items("search_paths"))
-        self.skip_paths = Cli_Indexer.Read_Paths(self.config.items("skip_paths"))
+        self.search_paths = Cli_Indexer.Read_Items(self.config.items("search_paths"))
+        self.skip_paths = Cli_Indexer.Read_Items(self.config.items("skip_paths"))
+
+        try:
+            self.include_extensions = Cli_Indexer.Read_Items(self.config.items("include_extensions"))
+        except configparser.NoSectionError:
+            self.include_extensions = self.DEFAULT_INCLUDE_EXTENSIONS
+
+        try:
+            self.other_extensions = Cli_Indexer.Read_Items(self.config.items("other_extensions"))
+        except configparser.NoSectionError:
+            self.other_extensions = self.DEFAULT_OTHER_EXTENSIONS
 
         print("search paths: {0}".format(self.search_paths))
         print("skip paths: {0}".format(self.skip_paths))
@@ -59,8 +72,6 @@ class Cli_Indexer:
 
     def Perform_Indexing(self):
         ## options
-        INCLUDE_EXTENSIONS = [".h", ".hpp", ".include"]
-        OTHER_EXTENSIONS = [".c", ".cpp", ".cc", ".define", ".py", ".lua", ".txt"]
 
         indexer = Indexer()
         indexer.processProj(
@@ -68,8 +79,8 @@ class Cli_Indexer:
             self.rootdir,
             self.search_paths,
             self.skip_paths,
-            INCLUDE_EXTENSIONS,
-            OTHER_EXTENSIONS,
+            self.include_extensions,
+            self.other_extensions,
         )
 
 if __name__ == "__main__":
