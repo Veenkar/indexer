@@ -41,7 +41,7 @@ class Indexer:
         paths = []
         for searchexpr in searchexprs:
             # print(extension)
-            regex = re.compile(searchexpr)
+            regex = re.compile(searchexpr, re.IGNORECASE)
 
             #new_paths = filter(regex.match, self.all_paths)
             #new_paths = list(new_paths)
