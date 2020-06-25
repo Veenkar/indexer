@@ -19,7 +19,7 @@ class Indexer:
         print("init dir: {0} {1}".format(searchdir, len(self.all_paths)))
 
 
-    def findFilesFast(self, extensions, searchdir=Path("."), rootdir=None, skip_paths=[]):
+    def findFilesFast(self, extensions, searchdir=Path("."), rootdir=None, skip_paths=[], additional_searchexprs = None):
         searchdir = Path(searchdir)
 
         if rootdir == None:
@@ -30,10 +30,17 @@ class Indexer:
         if not isinstance(extensions, list):
             extensions = [extensions]
 
+        if additional_searchexprs is None:
+            additional_searchexprs = []
+        elif not isinstance(additional_searchexprs, list):
+            additional_searchexprs = [additional_searchexprs]
+
+        searchexprs = [".*{0}$".format(re.escape(extension)) for extension in extensions]
+        searchexprs += additional_searchexprs
+
         paths = []
-        for extension in extensions:
+        for searchexpr in searchexprs:
             # print(extension)
-            searchexpr = ".*{0}$".format(re.escape(extension))
             regex = re.compile(searchexpr)
 
             #new_paths = filter(regex.match, self.all_paths)
@@ -48,7 +55,7 @@ class Indexer:
             new_paths = self.skipPaths(new_paths, skip_paths)
             if new_paths:
                 paths += new_paths
-            print("{0}: {1}".format(extension, len(new_paths)))
+            print("{0}:\t\t{1}".format(searchexpr, len(new_paths)))
             if PRINT_PATHS:
                 for path in new_paths:
                     print("\t{}".format(path))
@@ -95,7 +102,7 @@ class Indexer:
 
 
     def processProj( self,
-        proj_name, proj_path, search_paths, skip_paths, include_extensions, other_extensions
+        proj_name, proj_path, search_paths, skip_paths, include_extensions, other_extensions, additional_searchexprs=None
     ):
         ## projdir
         projdir = Path(proj_path)
@@ -120,6 +127,7 @@ class Indexer:
                 searchdir=projdir / search_path,
                 rootdir=projdir,
                 skip_paths=skip_paths,
+                additional_searchexprs=additional_searchexprs,
             )
 
         files = include_files + other_files

@@ -16,6 +16,7 @@ def main():
 class Cli_Indexer:
     DEFAULT_INCLUDE_EXTENSIONS = [".h", ".hpp", ".include"]
     DEFAULT_OTHER_EXTENSIONS = [".c", ".cpp", ".cc", ".define", ".py", ".lua", ".txt"]
+    DEFAULT_ADDITIONAL_SEARCHEXPRS = []
 
     def __init__(self):
         self.argparser = argparse.ArgumentParser()
@@ -69,6 +70,11 @@ class Cli_Indexer:
         except configparser.NoSectionError:
             self.other_extensions = self.DEFAULT_OTHER_EXTENSIONS
 
+        try:
+            self.additional_searchexprs = Cli_Indexer.Read_Items(self.config.items("additional_searchexprs"))
+        except configparser.NoSectionError:
+            self.additional_searchexprs = self.DEFAULT_ADDITIONAL_SEARCHEXPRS
+
         print("search paths: {0}".format(self.search_paths))
         print("skip paths: {0}".format(self.skip_paths))
 
@@ -84,6 +90,7 @@ class Cli_Indexer:
             self.skip_paths,
             self.include_extensions,
             self.other_extensions,
+            self.additional_searchexprs
         )
 
 if __name__ == "__main__":
