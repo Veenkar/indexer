@@ -23,7 +23,8 @@ class Cli_Indexer:
                                help="path to the project .idx config file")
         self.args = self.argparser.parse_args()
         print(self.args)
-        self.config_path = self.args.config_path
+        self.config_path = Path(self.args.config_path)
+        self.config_dir = Path(self.args.config_path).parent
         self.Read_Config()
 
     @staticmethod
@@ -48,11 +49,13 @@ class Cli_Indexer:
 
         try:
             self.name = self.config["general"]["name"]
-            self.rootdir = self.config["general"]["rootdir"]
+            self.rootdir = self.config_dir / Path(self.config["general"]["rootdir"])
         except Exception as e:
             print(str(e))
             print("ERROR: did not find proper config in file {0}".format(self.config_path))
-
+            exit(1)
+        print("rootdir: " + str(self.rootdir))
+        print("cfgdir: " + str(self.config_dir))
         self.search_paths = Cli_Indexer.Read_Items(self.config.items("search_paths"))
         self.skip_paths = Cli_Indexer.Read_Items(self.config.items("skip_paths"))
 
