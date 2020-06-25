@@ -76,7 +76,7 @@ class Indexer:
             append = True
             for skip_path in skiplist:
                 # TODO re-egzamine sh path matching (prev: if path.match(skip_path))
-                if skip_path in str(path):
+                if skip_path.lower() in str(path).lower():
                     append = False
             if append:
                 new_paths.append(str(path))
